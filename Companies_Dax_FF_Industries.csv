@@ -1,0 +1,40 @@
+﻿Name,Board size,Created,Industry,Market Cap Ranking,Sustainability Experience,Tags,FF_Industry
+Linde,12,"February 27, 2022 12:13 PM",Chemicals,1,Yes,,Chemicals
+SAP,18,"March 10, 2022 5:28 PM",Software & IT,2,Yes,,Business Services
+Siemens,20,"March 10, 2022 7:17 PM",Conglomerate,3,No,,Electrical Equipment
+Volkswagen,20,"March 11, 2022 10:27 AM",Automotive,4,Yes,,Automobiles and Trucks
+Allianz,12,"February 27, 2022 11:46 AM",Financial services,6,Yes,Sustainability Committee,Insurance
+Deutsche Telekom,20,"March 12, 2022 10:37 AM",Telecommunications,7,Yes,Trainning,Communication
+Merck,16,"March 12, 2022 8:08 PM",Pharmaceutical,8,No,,Pharmaceutical Products
+Mercedes-Benz,20,"March 12, 2022 9:27 PM",Automotive,9,Yes,Sustainability Expert,Automobiles and Trucks
+BASF,12,"March 13, 2022 11:55 AM",Chemicals,10,No,,Chemicals
+Siemens Healthineers,10,"March 14, 2022 9:37 AM",Health care,11,No,,Healthcare
+BMW,20,"March 14, 2022 12:24 PM",Automotive,12,Yes,Alleged Expert,Automobiles and Trucks
+Deutsche Post,20,"March 14, 2022 5:10 PM",Courier,13,No,Sustainability Committee,Transportation
+Bayer,20,"March 15, 2022 11:03 AM","Chemicals, Pharmaceutical",14,Yes,"Alleged Expert, Sustainability Committee, Sustainability Expert",Pharmaceutical Products
+Adidas,16,"March 15, 2022 1:56 PM",Clothing,15,Yes,Sustainability Expert,Apparel
+Infineon,16,"March 15, 2022 8:07 PM",Manufacturing,16,Yes,Task of existing committee,Machinery
+Munich RE,20,"March 16, 2022 2:16 PM",Financial services,17,Yes,"Alleged Expert, Task of existing committee",Electronic Equipment
+Vonovia,12,"March 16, 2022 4:23 PM",Real estate,18,Yes,"Alleged Expert, Sustainability Expert",Real Estate
+Henkel,17,"March 17, 2022 6:29 PM",Consumer Goods,19,Yes,,Consumer Goods
+E.ON,20,"March 18, 2022 3:28 PM",Energy,20,Yes,Sustainability Committee,Utilities
+Deutsche Börse,16,"March 18, 2022 8:53 PM",Financial services,21,No,Sustainability Committee,Banking
+Porsche,10,"March 21, 2022 10:46 AM",Automotive,22,No,,Automobiles and Trucks
+Deutsche Bank,20,"March 21, 2022 11:45 AM",Financial services,23,Yes,,Banking
+RWE,20,"March 21, 2022 4:16 PM",Energy,24,Yes,Sustainability Committee,Utilities
+Sartorius,12,"March 21, 2022 5:51 PM",Manufacturing,25,No,,Measuring and Control Equipment
+Fresenius,12,"March 22, 2022 12:10 PM",Health care,26,No,,Healthcare
+Beiersdorf,12,"March 22, 2022 3:17 PM",Consumer Goods,27,Yes,,Consumer Goods
+Fresenius Medical Care,6,"March 22, 2022 5:21 PM",Health care,28,Yes,,Healthcare
+Continental,20,"March 22, 2022 5:55 PM",Automotive,29,No,,Automobiles and Trucks
+Symrise,12,"March 23, 2022 9:55 PM",Chemicals,30,No,,Chemicals
+Zalando,9,"March 25, 2022 11:22 AM","Clothing, E-commerce",31,Yes,"Alleged Expert, Sustainability Committee, Sustainability Expert",Retail
+Siemens Energy,20,"March 25, 2022 1:19 PM",Energy,32,Yes,,Utilities
+PUMA,6,"March 28, 2022 1:48 PM",Clothing,33,Yes,"Sustainability Committee, Trainning",Apparel
+HeidelbergCement,12,"March 31, 2022 11:39 AM",Building materials,34,Yes,,Construction Materials
+Delivery Hero,6,"March 31, 2022 2:05 PM",E-commerce,35,Yes,,Retail
+Brenntag,6,"April 1, 2022 11:05 AM","Chemicals, Distribution",36,No,Alleged Expert,Transportation
+MTU Aero Engines,12,"April 1, 2022 4:08 PM","Aerospace, Defense",37,Yes,,Aircraft
+Qiagen,7,"April 2, 2022 7:46 PM",Biotechnology,38,No,Sustainability Committee,Measuring and Control Equipment
+Covestro,12,"April 2, 2022 9:51 PM","Building materials, Chemicals",39,Yes,Sustainability Committee,Chemicals
+HelloFresh,5,"April 2, 2022 10:29 PM",E-commerce,40,Yes,"Alleged Expert, Sustainability Committee, Sustainability Expert",Food Products

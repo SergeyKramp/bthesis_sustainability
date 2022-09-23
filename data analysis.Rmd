@@ -1,0 +1,452 @@
+---
+title: "Data analysis"
+author: "Sergey Kramp"
+date: "4/4/2022"
+output: html_document
+---
+## Loading the data and libraries
+
+```{r, echo=FALSE}
+library(data.table)
+library(tidyverse)
+library(stringr)
+library(patchwork)
+
+companies_DAX <- fread("C:/Users/Sergey Kramp/Documents/School Material/6_SS 2022/01_Thesis/Data/companies_Dax40.csv", encoding = "UTF-8")
+members_DAX <- fread("C:/Users/Sergey Kramp/Documents/School Material/6_SS 2022/01_Thesis/Data/members_Dax40.csv", encoding = "UTF-8")
+companies_MDAX <- fread("C:/Users/Sergey Kramp/Documents/School Material/6_SS 2022/01_Thesis/Data/Companies_MDax.csv")
+members_MDAX <- fread("C:/Users/Sergey Kramp/Documents/School Material/6_SS 2022/01_Thesis/Data/Members_MDax.csv", encoding = "UTF-8")
+
+```
+
+## Preparing the data
+```{r}
+
+companies_DAX[, Index := "DAX"]
+companies_MDAX[, Index := "MDAX"]
+# combine DAX and MDAX
+members <- rbind(members_DAX, members_MDAX)
+companies <- rbind(companies_DAX, companies_MDAX)
+
+prepare_member_data <-function(members) {
+members <- members[!duplicated(Name)]
+names(members) <- gsub(x = names(members), " ", "_")
+members[, Age:= 2022- `Year_of_Birth`]
+members[, Tenure:= 2022 - `Member_Since`]
+members[, ':='(CV = NULL, `Year_of_Birth` = NULL, `Member_Since` = NULL)]
+members[Gender == "M", Gender := "Male"]
+members[Gender == "F", Gender := "Female"]
+members[Sustainability_experience == "Y", Sustainability_experience := "Yes"]
+members[Sustainability_experience == "N", Sustainability_experience := "No"]
+members[PhD == "Y", PhD := "Yes"]
+members[PhD == "N", PhD := "No"]
+members[`Post-Doc` == "Y", `Post-Doc` := "Yes"]
+members[`Post-Doc` == "N", `Post-Doc` := "No"]
+members[Employee_Delegat == "Y", Employee_Delegat := "Yes"]
+members[Employee_Delegat == "N", Employee_Delegat := "No"]
+members[,':='(Nationality = as.factor(Nationality), Gender = as.factor(Gender), PhD = as.factor(PhD), `Post-Doc` = as.factor(`Post-Doc`),
+              `Employee_Delegat` = as.factor(`Employee_Delegat`), `Sustainability_experience` = as.factor(`Sustainability_experience`))]
+members[PhD == "", PhD := NA]
+members[`Post-Doc` == "", `Post-Doc` := NA]
+members[`Employee_Delegat` == "", `Employee_Delegat` := NA]
+members[`Sustainability_experience` == "", `Sustainability_experience` := NA]
+members[Nationality == "", Nationality := NA]
+members[, International := ifelse(Nationality == "German", "No", "Yes")][,International := as.factor(International)]
+members[is.na(Nationality), International := NA]
+members[, Committees := str_trim(Committees)]
+members <- separate(members, col = "Committees", into = c("Committee_1", "Committee_2", "Committee_3", "Committee_4", "Committee_5", "Committee_6", "Committee_7"), sep = ",")
+return(members)
+}
+
+members_DAX <- prepare_member_data(members_DAX)
+members_MDAX <- prepare_member_data(members_MDAX)
+members <- prepare_member_data(members)
+
+prepare_company_data <- function(companies){
+names(companies) <- gsub(x = names(companies), " ", "_")
+companies[,':='(`Sustainability_Experience` = as.factor(Sustainability_Experience))]
+companies[, Sustainability_Committee := ifelse(grepl("Sustainability Committee",Tags), 1, 0)]
+companies[, Alleged_Expert := ifelse(grepl("Alleged Expert",Tags), 1, 0)]
+companies[, Sustainability_Expert := ifelse(grepl("Sustainability Expert",Tags), 1, 0)]
+companies[, Trainning := ifelse(grepl("Trainning",Tags), 1, 0)]
+companies[, Task_of_existing_committee := ifelse(grepl("Task of existing committee",Tags), 1, 0)]
+companies[, Tags := NULL]
+companies[, Industry := str_trim(Industry)]
+companies[, Index := as.factor(Index)]
+
+return(companies)
+}
+
+companies_DAX <- prepare_company_data(companies_DAX)
+companies_MDAX <- prepare_company_data(companies_MDAX)
+companies <- prepare_company_data(companies)
+```
+
+
+## Set default theme
+```{r}
+theme_set(theme_minimal())
+windowsFonts(A = windowsFont("Times New Roman"))
+theme_update(text = element_text(size=14,  family= "A"))
+```
+
+## General information about the sample
+```{r}
+# Gender
+ggplot(members, aes(x = Gender)) + geom_bar() + geom_text(stat = "count", aes(label = ..count..), vjust = -0.5, position = position_dodge(2)) + labs(title = "Most supervisory board members are male")
+```
+
+
+
+## General with and without experience - members
+```{r, include=TRUE}
+ggplot(members[!is.na(Sustainability_experience)], aes(Sustainability_experience, fill = Sustainability_experience)) + geom_bar() + geom_text(stat='count', aes(label=..count..),position = position_dodge(2), vjust=-0.5) + ylab("Number of board members") + xlab("Has sustainability experience?") + scale_fill_manual(values = c("#fa766e", "#00bf7d")) + theme(legend.position = "none")
+
+```
+
+
+## General with and without experience - companies
+```{r, echo=T}
+ggplot(companies, aes(x= Sustainability_Experience, fill = Sustainability_Experience)) + geom_bar() + geom_text(stat='count', aes(label=..count..),position = position_dodge(2), vjust=-0.5) + ylab("Number of supervisory boards") + xlab("Has sustainability experience?") + scale_fill_manual(values = c("#fa766e", "#00bf7d")) + theme(legend.position = "none")
+  #labs(title = "Majority of companies don't have sustainability experience")
+```
+
+## General with and without experience - companies (DAX)
+```{r, echo=T}
+DAX <-  ggplot(companies_DAX, aes(x= Sustainability_Experience, fill = Sustainability_Experience )) + geom_bar() + geom_text(stat='count', aes(label=..count..),position = position_dodge(2), vjust=-0.5) +
+  labs(title = "DAX") + ylab("Number of supervisory boards") + ylim(0,30) + xlab("Has sustainability experience?") + scale_fill_manual(values = c("#fa766e", "#00bf7d")) + theme(legend.position = "none")
+
+```
+
+## General with and without experience - companies (MDAX)
+```{r, echo=T}
+MDAX <- ggplot(companies_MDAX, aes(x= Sustainability_Experience, fill = Sustainability_Experience)) + geom_bar() + geom_text(stat='count', aes(label=..count..),position = position_dodge(2), vjust=-0.5) +
+  labs(title = "MDAX") + ylab("Number of supervisory boards") + ylim(0,30) + xlab("Has sustainability experience?") + scale_fill_manual(values = c("#fa766e", "#00bf7d")) + theme(legend.position = "none", axis.title.y = element_blank(), axis.ticks.y = element_blank())
+
+```
+
+## Comparsion of DAX and MDAX
+```{r}
+DAX + MDAX
+
+```
+
+## For sustinability experts
+```{r}
+experts <- members[!is.na(Sustainability_experience)][Sustainability_experience == "Yes"]
+```
+
+## Distrebution of men vs. women in general sample
+```{r, echo=T}
+ggplot(members[!is.na(Gender)], aes(x=Gender, fill = Gender)) + geom_bar() + geom_text(stat='count', aes(label=..count..),position = position_dodge(2), vjust=-0.5) + ylab("Count") + scale_fill_manual(values = c("#fa766e", "#07b4f4")) + theme(legend.position = "none") + labs(title = "General sample")
+```
+
+## Distribution of men vs women experts
+```{r, echo=T}
+ggplot(experts[!is.na(Gender)], aes(x=Gender, fill = Gender)) + geom_bar() + geom_text(stat='count', aes(label=..count..),position = position_dodge(2), vjust=-0.5) + ylab("Count") + scale_fill_manual(values = c("#fa766e", "#07b4f4")) + theme(legend.position = "none") + labs(title = "Board members with sustainability experience")
+```
+
+###  Binomial test to check Female vs. Male distribution
+```{r}
+# For p used the probablity of sampling a male from the general sample
+p <- members[Gender == "Male", .N] / members[,.N]
+pbinom(experts[Gender == "Male",.N],nrow(experts), lower.tail = T, prob = p)
+
+# The probablity is 0.0007399314 which is lower than 0.05
+```
+
+## Age of members with and without sustainability experience
+```{r, echo=T}
+ggplot(members[!is.na(Age)], aes(y = Age, fill = Gender)) + geom_boxplot(position = position_dodge(1)) + facet_wrap(~Sustainability_experience, labeller = "label_both") + theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_blank())
+
+summary(members[, Age])
+summary(members[Sustainability_experience == "Yes" ,Age])
+summary(members[Sustainability_experience == "No" ,Age])
+
+nrow(members[!is.na(Age)])
+nrow(members[!is.na(Age) & Sustainability_experience == "Yes"])
+nrow(members[!is.na(Age) & Sustainability_experience == "No"])
+
+sd(members[, Age], na.rm = T)
+sd(members[Sustainability_experience == "Yes" ,Age], na.rm = T)
+sd(members[Sustainability_experience == "No" ,Age], na.rm = T)
+
+t.test(Age ~ Sustainability_experience, data = members, alternative = "two.sided")
+```
+## T test to check if there is a difference
+```{r}
+t.test(Age~Gender, data = experts)
+# test shows there is no difference
+```
+
+#PhD
+```{r}
+prop <- c (
+  members_no_NA[Sustainability_experience == "No" & PhD == "No", .N] / members_no_NA[Sustainability_experience == "No",.N],
+  members_no_NA[Sustainability_experience == "No" & PhD == "Yes", .N] / members_no_NA[Sustainability_experience == "No",.N],
+  experts_no_NA[PhD == "No", .N] / experts_no_NA[, .N],
+  experts_no_NA[PhD == "Yes", .N] / experts_no_NA[, .N]
+)
+
+SE <- c("No", "No", "Yes", "Yes")
+
+phd <- c("No", "Yes", "No", "Yes")
+
+dt_prop <- data.table(Proportion = prop, Sustainability_Experience = SE, PhD = phd)
+
+ggplot(dt_prop, aes(x = Sustainability_Experience, fill = PhD, weight= Proportion)) + geom_bar() + labs(title = "There is no significant difference in proportion of PhDs") + ylab("Proportion") +
+  xlab("Sustainability Experience")
+
+q1 <- members_no_NA[Sustainability_experience == "No" & PhD == "Yes", .N]
+q2 <- members_no_NA[Sustainability_experience == "Yes" & PhD == "Yes", .N]
+
+n1 <- members_no_NA[Sustainability_experience == "No", .N]
+n2 <- members_no_NA[Sustainability_experience == "Yes", .N]
+
+p1 <- q1 / n1
+p2 <- q2 / n2
+p_pooled <- (q1 + q2) / (n1 + n2)
+
+z <- (p1 - p2) / sqrt((p_pooled * (1 - p_pooled))/ n1 + (p_pooled * (1 - p_pooled))/n2)
+p_value <- 2 * pnorm(z, lower.tail = T)
+
+```
+
+## Tenure of experts
+```{r}
+ggplot(experts[!is.na(Tenure)], aes(y = Tenure, fill = Gender)) + geom_boxplot(position = position_dodge(1)) +  labs(title = "Distribution of the tenure of sustainability experts by gender")
+```
+
+
+## Tenure of experts vs. non-experts
+
+```{r}
+ggplot(members, aes(y = Tenure, fill = Sustainability_experience)) + geom_boxplot(position = position_dodge(1)) + labs(title = "There is no significant difference in tenure based on experiance in sustainability")
+t.test(Tenure ~ Sustainability_experience, data = members)
+
+members[!is.na(Tenure), .N]
+summary(members[!is.na(Tenure), Tenure])
+members[!is.na(Tenure), sd(Tenure)]
+members[!is.na(Tenure), sd(Tenure), by = Sustainability_experience]
+members[!is.na(Tenure), mean(Tenure)]
+members[!is.na(Tenure), summary(Tenure), by = Sustainability_experience]
+members[!is.na(Tenure), .N, by = Sustainability_experience]
+
+
+t.test(Tenure~Sustainability_experience, data = members[!is.na(Tenure)], alternative = "two.sided")
+```
+
+## Distribution of employee representative vs. shareholder representatives
+```{r}
+ggplot(members[!is.na(Employee_Delegat)], aes(x = Employee_Delegat)) + geom_bar() + geom_text(stat='count', aes(label=..count..),position = position_dodge(2), vjust=-0.5) + labs(title = "General sample") + ylab("Count") + xlab("Employee Representative")
+```
+
+## Distribution of employee representatives vs. shareholder representatives (among sustainability experts)
+```{r}
+ggplot(members[!is.na(Employee_Delegat) & `Sustainability_experience` == "Yes"], aes(x = Employee_Delegat)) + geom_bar() + geom_text(stat='count', aes(label=..count..),position = position_dodge(2), vjust=-0.5) + 
+  labs(title = "Among board members with sustainability experience") + ylab("Count") + xlab("Employee Representative")
+```
+
+## Binomial test check Employee_Delegat distribution
+```{r}
+# p used was the probablity of sampling an Employee_Delegat from general sample
+
+p <- members[Employee_Delegat == "Y", .N] / members[ ,.N]
+pbinom(experts[Employee_Delegat == "Y", .N], nrow(experts), lower.tail = T, prob = p)
+
+# The probability is 4.44998e-05 and therefore much lower than 0.05
+```
+
+## Board sizes of comapnies with and without sustainability expertise
+
+```{r}
+ggplot(companies, aes(y = Board_size, fill = Sustainability_Experience)) + geom_boxplot(position = position_dodge(1)) + ylab("Board Size") + labs(fill = "Sustainabiliy Experience", title = "There is no statistically significant difference in board size") + facet_wrap(~Index)
+```
+
+## Check if there is a real differnce with t test
+```{r}
+t.test(Board_size~Sustainability_Experience, data = companies, paired = F)
+# The test reveals there is a significant difference in board sized
+
+# Test for DAX companies
+t.test(Board_size~Sustainability_Experience, data = companies_DAX, paired = F)
+
+# Test for MDAX companies
+t.test(Board_size~Sustainability_Experience, data = companies_MDAX, paired = F)
+
+# The difference is confounded by the index
+```
+
+
+## International sustainability experts
+```{r}
+members_no_NA <- members[!is.na(Sustainability_experience) & !is.na(International)]
+experts_no_NA <- experts[!is.na(Sustainability_experience) & !is.na(International)]
+
+prop <- c (
+  members_no_NA[Sustainability_experience == "No" & International == "No", .N] / members_no_NA[Sustainability_experience == "No",.N],
+  members_no_NA[Sustainability_experience == "No" & International == "Yes", .N] / members_no_NA[Sustainability_experience == "No",.N],
+  experts_no_NA[International == "No", .N] / experts_no_NA[, .N],
+  experts_no_NA[International == "Yes", .N] / experts_no_NA[, .N]
+)
+#prop <- c((members[!is.na(Sustainability_experience) & !is.na(International)][Sustainability_experience == "N" & International == "Yes", .N]/members[!is.na(Sustainability_experience) & !is.na(International),.N]),
+#           (members[!is.na(Sustainability_experience) & !is.na(International)][Sustainability_experience == "N" & International == "No", .N]/members[!is.na(Sustainability_experience) & !is.na(International),.N]), 
+ #         (experts[International == "Yes", .N]/experts[,.N]), (experts[International == "No", .N]/experts[,.N]))
+
+SE <- c("No", "No", "Yes", "Yes")
+
+inter <- c("No", "Yes", "No", "Yes")
+
+dt_prop <- data.table(Proportion = prop, Sustainability_Experience = SE, International = inter)
+
+ggplot(dt_prop, aes(x = Sustainability_Experience, fill = International, weight= Proportion)) + geom_bar() + ylab("Proportion") + xlab("Has sustainability experience?") + scale_fill_manual(values = c("#fa766e", "#00bf7d")) + theme(legend.position = "bottom")
+
+# Z test to check if the difference is significant
+q1 <- members_no_NA[Sustainability_experience == "No" & International == "Yes", .N]
+q2 <- members_no_NA[Sustainability_experience == "Yes" & International == "Yes", .N]
+
+n1 <- members_no_NA[Sustainability_experience == "No", .N]
+n2 <- members_no_NA[Sustainability_experience == "Yes", .N]
+
+p1 <- q1 / n1
+p2 <- q2 / n2
+p_pooled <- (q1 + q2) / (n1 + n2)
+
+z <- (p1 - p2) / sqrt((p_pooled * (1 - p_pooled))/ n1 + (p_pooled * (1 - p_pooled))/n2)
+p_value <- 2 * pnorm(z, lower.tail = T)
+#prop.test(x = c(q1,q2), n = c(n1,n2))
+```
+
+## Count of Structural approaches
+```{r, fig.width= 10}
+count <- c(sum(companies$Sustainability_Committee), sum(companies$Alleged_Expert), sum(companies$Sustainability_Expert), sum(companies$Trainning), sum(companies$Task_of_existing_committee))
+
+approaches <- c("Sustainability Committee", "Alleged Expert", "Sustainability Expert", "Training", "Task of Existing Committee")
+
+dt_approaches <- data.table(Approach = approaches, Count = count)
+
+ggplot(dt_approaches, aes(weight = Count, fill = Approach)) + geom_bar(aes(x = Approach), position = position_dodge(10)) + xlab("Structural approach") + theme(axis.text = element_text(size = 12), legend.position = "none") + geom_text(aes(label=..weight.., y = Count, x = Approach),position = position_dodge(1), vjust=-0.5)
+
+```
+
+# Distribution of industries
+```{r, fig.height=6}
+industry_names<- unique(companies[,Industry])
+counts <- rep(NA,26)
+sustainability_counts <- rep(NA, 26)
+
+for(i in c(1:26)) {
+  count <- 0
+  sustainability_count <- 0
+  for (j in c(1:nrow(companies))){
+      if (companies[j, Industry] == industry_names[i]){
+        count = count + 1
+        if(companies[j, Sustainability_Experience] == "Yes"){
+          sustainability_count = sustainability_count + 1
+        }
+      }
+  }
+  counts[i] <- count
+  sustainability_counts[i] <- sustainability_count
+}
+
+industries <- data.table(Name = industry_names, Count = counts, Yes = sustainability_counts, No = counts - sustainability_counts)
+setorder(industries, Count, Yes)
+industries_1 <- industries[1:5]
+industries_2 <- industries[6:10]
+industries_3 <- industries[11:15]
+industries_4 <- industries[16:20]
+industries_5 <- industries[21:26]
+
+industries <- melt(industries, id.vars = "Name", measure.vars = c("Yes", "No"), variable.name = "Sustainability_Experience", value.name = "Value")
+industries_1 <- melt(industries_1, id.vars = "Name", measure.vars = c("Yes", "No"), variable.name = "Sustainability_Experience", value.name = "Value")
+industries_2 <- melt(industries_2, id.vars = "Name", measure.vars = c("Yes", "No"), variable.name = "Sustainability_Experience", value.name = "Value")
+industries_3 <- melt(industries_3, id.vars = "Name", measure.vars = c("Yes", "No"), variable.name = "Sustainability_Experience", value.name = "Value")
+industries_4 <- melt(industries_4, id.vars = "Name", measure.vars = c("Yes", "No"), variable.name = "Sustainability_Experience", value.name = "Value")
+industries_5 <- melt(industries_5, id.vars = "Name", measure.vars = c("Yes", "No"), variable.name = "Sustainability_Experience", value.name = "Value")
+
+ggplot(industries, aes(x = reorder(Name, Value), fill = Sustainability_Experience, y = Value)) + geom_bar(position = "stack", stat = "identity") + coord_flip() + labs(fill = "Sustainabiliy Experience") + theme(axis.title.x = element_blank(), axis.title.y = element_blank()) + scale_fill_manual(values = c("#00bf7d", "#fa766e")) + theme(legend.position = "bottom", legend.title = element_text(size = 12))
+
+```
+
+
+# Committee participation
+```{r}
+com1 <- unique(members[, str_trim(Committee_1)])
+com2 <- unique(members[, str_trim(Committee_2)])
+com3 <- unique(members[, str_trim(Committee_3)])
+com4 <- unique(members[, str_trim(Committee_4)])
+com5 <- unique(members[, str_trim(Committee_5)])
+com6 <- unique(members[, str_trim(Committee_6)])
+com7 <- unique(members[, str_trim(Committee_7)])
+committee_names <- unique(c(com1, com2, com3, com4, com5, com6, com7))
+committee_names <- committee_names[!is.na(committee_names) & committee_names != ""]
+
+members[is.na(Committee_2), Committee_2 := "None"]
+members[is.na(Committee_3), Committee_3 := "None"]
+members[is.na(Committee_4), Committee_4 := "None"]
+members[is.na(Committee_5), Committee_5 := "None"]
+members[is.na(Committee_6), Committee_6 := "None"]
+members[is.na(Committee_7), Committee_7 := "None"]
+members[is.na(Sustainability_experience), Sustainability_experience := "ND"]
+
+counts <- rep(NA,48)
+sustainability_counts <- rep(NA,48)
+for(i in c(1:48)) {
+  count <- 0
+  sustainability_count <- 0
+  for(j in c(1:nrow(members))) {
+    if(members[j, Committee_1] == committee_names[i]) {
+      count = count + 1
+      if(members[j, Sustainability_experience] == "Yes"){
+        sustainability_count <- sustainability_count + 1
+      }
+    if(members[j, Committee_2] == committee_names[i]) {
+      count = count + 1
+      if(members[j, Sustainability_experience] == "Yes"){
+        sustainability_count <- sustainability_count + 1
+      }
+    }
+    if(members[j, Committee_3] == committee_names[i]) {
+      count = count + 1
+      if(members[j, Sustainability_experience] == "Yes"){
+        sustainability_count <- sustainability_count + 1
+      }
+    }
+    if(members[j, Committee_4] == committee_names[i]) {
+      count = count + 1
+      if(members[j, Sustainability_experience] == "Yes"){
+        sustainability_count <- sustainability_count + 1
+      }
+    }
+    if(members[j, Committee_5] == committee_names[i]) {
+      count = count + 1
+      if(members[j, Sustainability_experience] == "Yes"){
+        sustainability_count <- sustainability_count + 1
+      }
+    }
+    if(members[j, Committee_6] == committee_names[i]) {
+      count = count + 1
+      if(members[j, Sustainability_experience] == "Yes"){
+        sustainability_count <- sustainability_count + 1
+      }
+    }
+    if(members[j, Committee_7] == committee_names[i]) {
+      count = count + 1
+      if(members[j, Sustainability_experience] == "Yes"){
+        sustainability_count <- sustainability_count + 1
+      }
+    }
+    }
+  }
+  counts[i] <- count
+  sustainability_counts[i] <- sustainability_count
+  
+}
+
+committee_dt <- data.table(Name = committee_names, Members = counts, Sustainability_Experience = sustainability_counts)
+
+setorder(committee_dt, cols = - "Sustainability_Experience")
+committee_dt[Sustainability_Experience > 0]
+
+```
