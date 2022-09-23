@@ -1,5 +1,5 @@
 # bthesis_sustainability
-The is the R code used for my bachelor thesis.
+The is the R code and data used for my bachelor thesis in sustainable corporate governance.
 
 
 ABSTRACT:
